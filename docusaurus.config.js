@@ -22,7 +22,6 @@ const config = {
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: `/${projectName}/`,
-
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName, // Usually your GitHub org/user name.
@@ -99,7 +98,7 @@ const config = {
           },
           {to: '/blog', label: 'Blog', position: 'left'},
           {
-            href: 'https://github.com/facebook/docusaurus',
+            href: `https://github.com/${organizationName}/${projectName}/`,
             label: 'GitHub',
             position: 'right',
           },
@@ -143,7 +142,7 @@ const config = {
               },
               {
                 label: 'GitHub',
-                href: 'https://github.com/facebook/docusaurus',
+                href: `https://github.com/${organizationName}/${projectName}/`,
               },
             ],
           },
