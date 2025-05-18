@@ -1,0 +1,8 @@
+{
+  "label": "Wingmen",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "Wingmen are AI-Assistants that help you."
+  }
+}
