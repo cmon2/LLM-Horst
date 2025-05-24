@@ -1,45 +1,49 @@
 """
-title: Message Date And Time
-author: benasraudys
-author_url: https://github.com/benasraudys
-funding_url: https://github.com/benasraudys
-description: Gives model current date and time context for each message. Don't forget to adjust the timezone in the settings.
-version: 0.1.1
-required_open_webui_version: 0.6.4
+title: Append Taiga Projects
+author: cmon2
+author_url: https://github.com/cmon2
+git_url: https://github.com/cmon2
+description: Provides model with Taiga project context. Requires TAIGA_API_URL, TAIGA_USERNAME, and TAIGA_PASSWORD to be set in the environment variables.
+requirements: cmon2lib
+license: MIT
 """
 
 import os
 from pydantic import BaseModel, Field
 from typing import Callable, Awaitable, Any, Optional
 
+# Import the cmon2lib library
+try:
+    import cmon2lib.taiga.taiga_user_functions
+    import cmon2lib.taiga.taiga_project_functions
+except ImportError:
+    raise ImportError("The 'cmon2lib' library is not installed. Please install it using 'pip install cmon2lib'.")
+
 
 class Filter:
     class Valves(BaseModel):
-        timezone_hours: string = Field(
-            default=0,
-            description="Timezone offset hours (e.g., 5 for UTC+5:30, -4 for UTC-4:00)",
+        taiga_api_url: str = Field(
+            default="",
+            description="The URL of your Taiga API (e.g., https://api.taiga.io/api/v1)",
         )
-        timezone_minutes: int = Field(
-            default=0,
-            description="Timezone offset minutes (e.g., 30 for UTC+5:30, 45 for UTC-4:45)",
+        taiga_username: str = Field(
+            default="",
+            description="Your Taiga username",
         )
-        southern_hemisphere: bool = Field(
-            default=False,
-            description="Enable if you're in the Southern Hemisphere (Australia, South America, etc.)",
+        taiga_password: str = Field(
+            default="",
+            description="Your Taiga password",
         )
 
     def __init__(self):
         self.valves = self.Valves(
             **{
-                "timezone_hours": int(os.getenv("DATETIME_TIMEZONE_HOURS", "0")),
-                "timezone_minutes": int(os.getenv("DATETIME_TIMEZONE_MINUTES", "0")),
-                "southern_hemisphere": os.getenv(
-                    "DATETIME_SOUTHERN_HEMISPHERE", "false"
-                ).lower()
-                == "true",
+                "taiga_api_url": os.getenv("TAIGA_API_URL", ""),
+                "taiga_username": os.getenv("TAIGA_USERNAME", ""),
+                "taiga_password": os.getenv("TAIGA_PASSWORD", ""),
             }
         )
-    
+
     async def inlet(
         self,
         body: dict,
@@ -48,24 +52,44 @@ class Filter:
         __user__: Optional[dict] = None,
         __model__: Optional[dict] = None,
     ) -> dict:
-        now_utc = datetime.datetime.utcnow()
+        taiga_api_url = self.valves.taiga_api_url
+        taiga_username = self.valves.taiga_username
+        taiga_password = self.valves.taiga_password
 
-        timezone_hours = self.valves.timezone_hours
-        timezone_minutes = self.valves.timezone_minutes
-        total_offset_minutes = (timezone_hours * 60) + timezone_minutes
+        if not all([taiga_api_url, taiga_username, taiga_password]):
+            print("Taiga API credentials not fully set. Skipping Taiga context.")
+            return body
 
-        
+        try:
+            # Get authenticated user projects
+            user_projects = cmon2lib.taiga.taiga_user_functions.get_authenticated_user_projects(
+                host=taiga_api_url,
+                user=taiga_username,
+                password=taiga_password,
+            )
 
-        context = f"Current date is {day_of_week}, {formatted_date}, {season}, {time_of_day}, the user time is {formatted_time} {timezone_str}"
+            # Build project context
+            taiga_projects_list = []
+            if user_projects:
+                for project in user_projects:
+                    # You might want to customize what project information you include
+                    # For example, using cprint_project to get a formatted string
+                    project_info = cmon2lib.taiga.taiga_project_functions.cprint_project(project)
+                    taiga_projects_list.append(project_info)
 
-        datetime_message = {
-            "role": "system",
-            "content": f"Time context: {context}. ",
-        }
+            context = "\n".join(taiga_projects_list) if taiga_projects_list else "No Taiga projects found for the user."
 
-        if "messages" in body and isinstance(body["messages"], list):
-            body["messages"].insert(0, datetime_message)
-        else:
-            body["messages"] = [datetime_message]
+            taiga_projects_message = {
+                "role": "system",
+                "content": f"Taiga Projects Context: \n{context}",
+            }
+
+            if "messages" in body and isinstance(body["messages"], list):
+                body["messages"].insert(0, taiga_projects_message)
+            else:
+                body["messages"] = [taiga_projects_message]
+
+        except Exception as e:
+            print(f"Error fetching Taiga projects: {e}")
 
         return body
