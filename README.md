@@ -2,6 +2,11 @@
 
 LLM-Horst is a tailored AI assistant environment built on Open WebUI and Ollama, designed to deliver practical, real-world applications of large language models.
 
+# State of the repository
+
+This repository is currently just a docusaurus page set up for automatic deployment to github pages.
+I will later add the actual files needed to run LLM Horst as advertised.
+
 # Website
 
 This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
