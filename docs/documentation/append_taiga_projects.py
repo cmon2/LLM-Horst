@@ -52,7 +52,7 @@ class Filter:
         __user__: Optional[dict] = None,
         __model__: Optional[dict] = None,
     ) -> dict:
-        taiga_api_url = self.valves.taiga_api_url
+        os.settaiga_api_url = self.valves.taiga_api_url
         taiga_username = self.valves.taiga_username
         taiga_password = self.valves.taiga_password
 
