@@ -1,3 +1,11 @@
+Note 2025-05-24 08h27s50
+========================
+
+# Inject Time
+
+## Python Implementation: `append_basic_data.py`
+
+```python live
 """
 title: Append Basic Data
 author: cmon2
@@ -15,7 +23,6 @@ license: MIT
 from pydantic import BaseModel, Field
 from typing import Callable, Awaitable, Any, Optional
 from cmon2lib.utils.cmon_logging import clog
-
 
 class Filter:
     class Valves(BaseModel):
@@ -39,3 +46,5 @@ class Filter:
             body["messages"] = ["Hello world:)"]
 
         return body
+```
+
